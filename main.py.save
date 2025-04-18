@@ -1,0 +1,50 @@
+import os
+from openai import OpenAI
+from dotenv import load_dotenv
+
+# Cargar API key
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
+
+client = OpenAI(api_key=api_key)
+
+# Historial en memoria para mantener contexto
+historial_mensajes = [
+    {"role": "system", "content": "Eres un asistente útil y conversacional."}
+]
+
+# Función para preguntar a ChatGPT
+def preguntar_a_chatgpt(pregunta):
+    historial_mensajes.append({"role": "user", "content": pregunta})
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=historial_mensajes
+    )
+
+    respuesta = response.choices[0].message.content.strip()
+    historial_mensajes.append({"role": "assistant", "content": respuesta})
+    return respuesta
+
+# Función para mostrar el contenido de historial.txt
+def mostrar_historial():
+    if os.path.exists("historial.txt"):
+        with open("historial.txt", "r", encoding="utf-8") as archivo:
+            contenido = archivo.read()
+            print("\n📜 HISTORIAL GUARDADO:\n")
+            print(contenido)
+    else:
+        print("\n(El historial.txt aún no existe o está vacío)\n")
+
+# Ciclo principal
+if __name__ == "__main__":
+    while True:
+        pregunta = input("¿Qué deseas preguntar? (escribe 'salir' para terminar o 'ver historial'): ")
+        if pregunta.lower() == "salir":
+            break
+        elif pregunta.lower() == "ver historial":
+            mostrar_historial()
+            continue
+        respuesta = preguntar_a_chatgpt(pregunta)
+        print(f"\n🤖 Respuesta:\n{respuesta}\n")
+
